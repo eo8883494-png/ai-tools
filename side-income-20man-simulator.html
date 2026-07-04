@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>副業20万円ラインシミュレーター｜確定申告が必要かどうかを自動判定</title>
+<meta name="description" content="副業の収入と経費を入れるだけで、確定申告が必要な「20万円ライン」を超えているかを自動判定。住民税申告の注意点もあわせて解説する無料シミュレーターです。">
+<meta property="og:title" content="副業20万円ラインシミュレーター｜はたらくAI研究室">
+<meta property="og:description" content="副業の所得が20万円を超えるかどうかをその場で判定。住民税の落とし穴も解説。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="はたらくAI研究室">
+<!-- TODO: canonical を設定 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F6F2;
+  --ink:#1F2933;
+  --ai:#2B4C7E;
+  --shu:#C73E3A;
+  --rule:#D9D5CC;
+  --card:#FFFFFF;
+  --muted:#6B7280;
+  --mincho:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:var(--ai)}
+a:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto;padding:0 20px 64px}
+.site{display:flex;align-items:center;gap:10px;padding:20px 0 8px;font-size:13px;letter-spacing:.06em;color:var(--muted)}
+.hanko{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--shu);color:#FBF6EE;font-family:var(--mincho);font-weight:700;font-size:14px;border-radius:4px;transform:rotate(-4deg)}
+h1{font-family:var(--mincho);font-weight:700;font-size:clamp(30px,7vw,40px);line-height:1.35;letter-spacing:.02em;margin:12px 0 10px}
+.lead{color:var(--muted);font-size:15px;margin-bottom:6px}
+.meta{font-size:12px;color:var(--muted);margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-bottom:20px}
+.card h2{font-family:var(--mincho);font-weight:600;font-size:19px;letter-spacing:.03em;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+
+.seg{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-bottom:18px}
+.seg button{flex:1;font-family:var(--sans);font-size:13px;padding:10px 8px;border:none;background:var(--card);color:var(--muted);cursor:pointer}
+.seg button.active{background:var(--ai);color:#FFF}
+.seg button:not(.active):hover{background:#EFEDE6}
+
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:6px}
+.field label{display:block;font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:5px}
+.field input{width:100%;font-family:var(--mono);font-size:18px;color:var(--ink);background:#FDFCFA;border:1px solid var(--rule);border-radius:6px;padding:9px 10px}
+.field .hint{font-size:11px;color:var(--muted);margin-top:4px}
+#expense-field{display:block}
+
+.gauge-wrap{margin-top:22px}
+.gauge-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.gauge{position:relative;height:28px;background:#EFEDE6;border-radius:6px;overflow:hidden}
+.gauge .fill{position:absolute;left:0;top:0;height:100%;background:var(--ai);border-radius:6px 0 0 6px;transition:width .3s ease}
+.gauge.over .fill{background:var(--shu)}
+.gauge .line{position:absolute;left:100%;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.gauge-note{font-size:12px;color:var(--muted);margin-top:8px}
+
+.verdict{border-radius:10px;padding:20px;margin-top:18px;border:1px solid}
+.verdict.safe{background:#EAF3DE;border-color:#97C459}
+.verdict.needs{background:#FCEBEB;border-color:#F09595}
+.verdict .vtitle{font-family:var(--mincho);font-weight:600;font-size:18px;margin-bottom:6px}
+.verdict.safe .vtitle{color:#27500A}
+.verdict.needs .vtitle{color:#791F1F}
+.verdict p{font-size:14px;color:var(--ink);margin-bottom:0}
+
+.note-box{background:#FDFCF9;border:1px dashed var(--rule);border-radius:10px;padding:16px 18px;margin-top:14px;font-size:13px;color:var(--muted)}
+.note-box strong{color:var(--ink)}
+
+.prose h2{font-family:var(--mincho);font-weight:600;font-size:21px;margin:36px 0 12px}
+.prose h3{font-size:16px;font-weight:600;margin:22px 0 6px}
+.prose p{margin-bottom:12px}
+.prose ul{margin:0 0 14px 1.2em}
+.prose li{margin-bottom:6px;font-size:15px}
+
+.author{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-top:36px}
+.author h2{font-family:var(--mincho);font-weight:600;font-size:18px;margin-bottom:8px}
+.author p{font-size:14px;color:var(--muted);margin-bottom:14px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;font-size:14px;text-decoration:none;padding:10px 16px;border-radius:6px;border:1px solid var(--ai)}
+.btn.primary{background:var(--ai);color:#FFF}
+.btn.ghost{color:var(--ai)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);font-size:12px;color:var(--muted)}
+footer p{margin-bottom:8px}
+@media (prefers-reduced-motion:no-preference){
+  .btn{transition:opacity .15s ease}
+  .btn:hover{opacity:.85}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="site">
+  <span class="hanko" aria-hidden="true">研</span>
+  <span>はたらくAI研究室</span>
+</header>
+
+<main>
+<h1>副業20万円<br>ラインシミュレーター</h1>
+<p class="lead">副業の収入と経費を入れるだけで、確定申告が必要な「20万円ライン」を超えているかをその場で判定します。</p>
+<p class="meta">最終更新：2026年7月｜国税庁の公式ルールに基づく概算です（令和7年度税制改正後も20万円ルール自体に変更なし）</p>
+
+<section class="card" aria-labelledby="h-input">
+  <h2 id="h-input">副業の内容</h2>
+  <p class="sub">会社員（給与を1か所から受けていて、年末調整済み）を想定した判定です。</p>
+
+  <div class="seg" role="tablist" aria-label="副業の所得区分">
+    <button type="button" class="active" id="btn-misc" role="tab" aria-selected="true">雑所得・事業所得<br><span style="font-size:10px">（コンテンツ販売・原稿料など）</span></button>
+    <button type="button" id="btn-wage" role="tab" aria-selected="false">給与<br><span style="font-size:10px">（副業アルバイト・パート）</span></button>
+  </div>
+
+  <div class="fields">
+    <div class="field">
+      <label for="income" id="income-label">年間の副業収入（円）</label>
+      <input id="income" type="number" inputmode="numeric" min="0" step="1" value="250000">
+    </div>
+    <div class="field" id="expense-field">
+      <label for="expense">年間の必要経費（円）</label>
+      <input id="expense" type="number" inputmode="numeric" min="0" step="1" value="30000">
+      <p class="hint">サーバー代・機材・参考書籍など</p>
+    </div>
+  </div>
+
+  <div class="gauge-wrap">
+    <div class="gauge-labels">
+      <span>0円</span>
+      <span id="gauge-current">－</span>
+      <span>20万円ライン</span>
+    </div>
+    <div class="gauge" id="gauge">
+      <div class="fill" id="gauge-fill" style="width:0%"></div>
+      <div class="line"></div>
+    </div>
+    <p class="gauge-note" id="gauge-note"></p>
+  </div>
+
+  <div class="verdict safe" id="verdict">
+    <p class="vtitle" id="verdict-title">－</p>
+    <p id="verdict-body">－</p>
+  </div>
+
+  <div class="note-box">
+    <strong>住民税は別ルール：</strong>所得税の確定申告が不要でも、住民税の申告はお住まいの市区町村へ別途必要です（20万円ルールの対象外）。また、医療費控除やふるさと納税（ワンストップ特例未使用）で確定申告をする場合は、副業所得が1円でも合算申告が必要になります。
+  </div>
+</section>
+
+<section class="prose" aria-labelledby="h-how">
+  <h2 id="h-how">20万円ルールの仕組み</h2>
+  <p>会社員など、1か所から給与をもらっていて年末調整を受けている人は、給与・退職所得以外の所得（副業の雑所得・事業所得など）の合計が年間20万円を超えると、所得税の確定申告が必要になります。20万円ちょうどなら申告不要、20万1円から必要という「超える」判定です。</p>
+
+  <h3>「収入」ではなく「所得」で判定（雑所得・事業所得の場合）</h3>
+  <p>ここが一番間違えやすいポイントです。判定に使うのは売上（収入）ではなく、そこから必要経費を引いた「所得」です。たとえばコンテンツ販売で25万円売れても、サーバー代や制作ソフト代などの経費が6万円あれば、所得は19万円となり申告は不要になります。</p>
+
+  <h3>副業がアルバイト・パート（給与）の場合は別ルール</h3>
+  <p>副業が給与（アルバイト・パートなど）の場合は、所得ではなく額面の収入金額そのもので20万円を判定します。経費という概念がないためです。</p>
+
+  <h3>住民税には20万円ルールがない</h3>
+  <p>所得税の20万円ルールは、あくまで所得税だけの特例です。住民税にはこの特例がなく、副業所得が20万円以下でも、原則としてお住まいの市区町村へ住民税の申告が必要です（確定申告をした場合は、その情報が自動的に市区町村へ連携されるため、住民税の申告は別途不要になります）。</p>
+
+  <h3>こんな場合は20万円以下でも確定申告が必要</h3>
+  <ul>
+    <li>医療費控除を受けたい場合</li>
+    <li>ふるさと納税でワンストップ特例を使わなかった場合</li>
+    <li>2か所以上から給与を受けていて、年末調整されない給与がある場合</li>
+    <li>インボイス登録をして消費税の課税事業者になっている場合（消費税は別の申告義務）</li>
+  </ul>
+
+  <h3>副業を会社に知られたくない場合</h3>
+  <p>確定申告書の「住民税に関する事項」で「自分で納付（普通徴収）」を選ぶと、副業分の住民税の納付書が自宅に届き、会社の給与天引きとは分離されます。ただし自治体によっては対応していない場合や、副業先からの支払調書経由で伝わる場合もあるため、完全に伏せられるとは限りません。</p>
+</section>
+
+<aside class="author" aria-labelledby="h-author">
+  <h2 id="h-author">この計算機について</h2>
+  <p>運営は「はたらくAI研究室」（著者名：AI愛好家）。本ツールは国税庁の公表ルールに基づく一般的な判定であり、個別の税務相談ではありません。正確な判断は税理士または最寄りの税務署・市区町村役場にご確認ください。</p>
+  <div class="btns">
+    <a class="btn primary" href="https://ainative.booth.pm" target="_blank" rel="noopener">AIプロンプト100選を見る（BOOTH）</a>
+    <a class="btn ghost" href="./fee-comparison-calculator.html">販売手数料比較計算機も使う</a>
+  </div>
+</aside>
+
+<footer>
+  <p>免責事項：本ツールの判定はあくまで一般的なケースに基づく概算です。所得区分の判定、経費の可否、扶養や社会保険への影響などは個別の事情により異なります。正確な申告要否は税理士・税務署・市区町村役場でご確認ください。</p>
+  <p>© 2026 はたらくAI研究室</p>
+</footer>
+</main>
+</div>
+
+<script>
+/*CALC-START*/
+var LINE = 200000;
+var mode = 'misc';
+
+function judgeMisc(income, expense){
+  var profit = Math.max(0, income - expense);
+  return {profit: profit, needsFiling: profit > LINE};
+}
+function judgeWage(income){
+  return {profit: Math.max(0, income), needsFiling: income > LINE};
+}
+/*CALC-END*/
+
+function yen(n){ return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+
+function setMode(m){
+  mode = m;
+  document.getElementById('btn-misc').classList.toggle('active', m === 'misc');
+  document.getElementById('btn-misc').setAttribute('aria-selected', m === 'misc');
+  document.getElementById('btn-wage').classList.toggle('active', m === 'wage');
+  document.getElementById('btn-wage').setAttribute('aria-selected', m === 'wage');
+  document.getElementById('expense-field').style.display = m === 'misc' ? 'block' : 'none';
+  document.getElementById('income-label').textContent = m === 'misc' ? '年間の副業収入（円）' : '年間の副業給与・額面（円）';
+  update();
+}
+
+function update(){
+  var income = parseFloat(document.getElementById('income').value);
+  if (isNaN(income) || income < 0) income = 0;
+  var expense = parseFloat(document.getElementById('expense').value);
+  if (isNaN(expense) || expense < 0) expense = 0;
+
+  var result = mode === 'misc' ? judgeMisc(income, expense) : judgeWage(income);
+  var profit = result.profit;
+  var needsFiling = result.needsFiling;
+
+  var pct = Math.min(100, (profit / LINE) * 100);
+  var over = profit > LINE;
+  document.getElementById('gauge').classList.toggle('over', over);
+  document.getElementById('gauge-fill').style.width = pct + '%';
+  document.getElementById('gauge-current').textContent = (mode === 'misc' ? '所得 ' : '収入 ') + yen(profit);
+
+  var label = mode === 'misc' ? '所得' : '収入';
+  if (over) {
+    document.getElementById('gauge-note').textContent = '20万円ラインを ' + yen(profit - LINE) + ' 超えています。';
+  } else {
+    document.getElementById('gauge-note').textContent = '20万円ラインまで、あと ' + yen(LINE - profit) + '（' + label + 'ベース）。';
+  }
+
+  var verdict = document.getElementById('verdict');
+  var title = document.getElementById('verdict-title');
+  var body = document.getElementById('verdict-body');
+
+  if (needsFiling) {
+    verdict.className = 'verdict needs';
+    title.textContent = '所得税の確定申告が必要です';
+    body.textContent = (mode === 'misc' ? '所得' : '収入') + 'が' + yen(profit) + 'で、20万円ラインを超えています。翌年2月16日〜3月15日の期間に確定申告を行ってください。';
+  } else {
+    verdict.className = 'verdict safe';
+    title.textContent = '所得税の確定申告は不要です';
+    body.textContent = (mode === 'misc' ? '所得' : '収入') + 'が' + yen(profit) + 'で、20万円ライン以下です（所得税のみ。下記の住民税の注意点は必ずご確認ください）。';
+  }
+}
+
+document.getElementById('btn-misc').addEventListener('click', function(){ setMode('misc'); });
+document.getElementById('btn-wage').addEventListener('click', function(){ setMode('wage'); });
+document.getElementById('income').addEventListener('input', update);
+document.getElementById('expense').addEventListener('input', update);
+update();
+</script>
+</body>
+</html>
