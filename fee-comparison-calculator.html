@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>販売手数料比較計算機｜BOOTH・note・ココナラ・Kindleの手取りを一括比較</title>
+<meta name="description" content="同じ価格で売ったとき、BOOTH・note・ココナラ・KindleKDPで手取りがいくら変わるかを自動計算。デジタルコンテンツ販売の手数料を無料で比較できるシミュレーターです。">
+<meta property="og:title" content="販売手数料比較計算機｜はたらくAI研究室">
+<meta property="og:description" content="価格を入れるだけでBOOTH・note・ココナラ・Kindleの手取りを横並びで比較。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="はたらくAI研究室">
+<!-- TODO: サイト公開後に canonical を設定 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F6F2;
+  --ink:#1F2933;
+  --ai:#2B4C7E;
+  --shu:#C73E3A;
+  --rule:#D9D5CC;
+  --card:#FFFFFF;
+  --muted:#6B7280;
+  --mincho:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:var(--ai)}
+a:focus-visible,input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto;padding:0 20px 64px}
+.site{display:flex;align-items:center;gap:10px;padding:20px 0 8px;font-size:13px;letter-spacing:.06em;color:var(--muted)}
+.hanko{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--shu);color:#FBF6EE;font-family:var(--mincho);font-weight:700;font-size:14px;border-radius:4px;transform:rotate(-4deg)}
+h1{font-family:var(--mincho);font-weight:700;font-size:clamp(30px,7vw,40px);line-height:1.35;letter-spacing:.02em;margin:12px 0 10px}
+.lead{color:var(--muted);font-size:15px;margin-bottom:6px}
+.meta{font-size:12px;color:var(--muted);margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-bottom:20px}
+.card h2{font-family:var(--mincho);font-weight:600;font-size:19px;letter-spacing:.03em;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:6px}
+.field label{display:block;font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:5px}
+.field input,.field select{width:100%;font-family:var(--mono);font-size:18px;color:var(--ink);background:#FDFCFA;border:1px solid var(--rule);border-radius:6px;padding:9px 10px}
+.field select{font-family:var(--sans);font-size:15px}
+.field .hint{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ranking */
+.rank{border-top:1px solid var(--rule);margin-top:18px}
+.rline{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px dotted var(--rule)}
+.rline:last-child{border-bottom:none}
+.rline .medal{font-family:var(--mincho);font-weight:700;font-size:14px;color:var(--muted);width:20px;flex:none}
+.rline.first .medal{color:var(--shu)}
+.rline .name{font-size:15px;font-weight:500;min-width:96px;flex:none}
+.rline .barwrap{flex:1;background:#EFEDE6;border-radius:4px;height:26px;position:relative;overflow:hidden}
+.rline .bar{background:var(--ai);height:100%;border-radius:4px;transition:width .3s ease}
+.rline.first .bar{background:var(--shu)}
+.rline .fig{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:17px;font-weight:600;min-width:88px;text-align:right;flex:none}
+.rline .pct{font-size:11px;color:var(--muted);min-width:44px;text-align:right;flex:none}
+.diff-note{font-size:13px;color:var(--muted);padding-top:14px}
+.diff-note strong{color:var(--ink)}
+
+.prose h2{font-family:var(--mincho);font-weight:600;font-size:21px;margin:36px 0 12px}
+.prose h3{font-size:16px;font-weight:600;margin:22px 0 6px}
+.prose p{margin-bottom:12px}
+.prose .formula{font-family:var(--mono);font-size:13px;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:10px 14px;margin:8px 0 14px;overflow-x:auto;white-space:nowrap}
+.prose table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0 16px}
+.prose th,.prose td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule)}
+.prose th{font-weight:500;color:var(--muted);font-size:12px}
+
+.author{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-top:36px}
+.author h2{font-family:var(--mincho);font-weight:600;font-size:18px;margin-bottom:8px}
+.author p{font-size:14px;color:var(--muted);margin-bottom:14px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;font-size:14px;text-decoration:none;padding:10px 16px;border-radius:6px;border:1px solid var(--ai)}
+.btn.primary{background:var(--ai);color:#FFF}
+.btn.ghost{color:var(--ai)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);font-size:12px;color:var(--muted)}
+footer p{margin-bottom:8px}
+@media (prefers-reduced-motion:no-preference){
+  .btn{transition:opacity .15s ease}
+  .btn:hover{opacity:.85}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="site">
+  <span class="hanko" aria-hidden="true">研</span>
+  <span>はたらくAI研究室</span>
+</header>
+
+<main>
+<h1>販売手数料比較計算機</h1>
+<p class="lead">同じ価格で売ったとき、BOOTH・note・ココナラ・Kindle（KDP）で手取りはいくら変わる？価格を入れるだけで自動比較します。</p>
+<p class="meta">最終更新：2026年7月｜各社公式ヘルプの料率に基づく概算です</p>
+
+<section class="card" aria-labelledby="h-input">
+  <h2 id="h-input">販売条件</h2>
+  <p class="sub">デジタルコンテンツ（ダウンロード販売）を想定した比較です。</p>
+  <div class="fields">
+    <div class="field">
+      <label for="price">販売価格（税込・円）</label>
+      <input id="price" type="number" inputmode="numeric" min="0" step="1" value="1000">
+    </div>
+    <div class="field">
+      <label for="note-method">noteの決済方法</label>
+      <select id="note-method">
+        <option value="card">クレジットカード（事務手数料5%）</option>
+        <option value="paypay">PayPay／Amazon Pay（7%）</option>
+        <option value="notepoint">noteポイント（10%）</option>
+        <option value="paypal">PayPal（6.5%）</option>
+        <option value="carrier">キャリア決済（15%）</option>
+      </select>
+      <p class="hint">購入者が選ぶため、出品者側は選べません</p>
+    </div>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="h-result">
+  <h2 id="h-result">手取り比較</h2>
+  <p class="sub" id="price-echo">－</p>
+  <div class="rank" id="rank"></div>
+  <p class="diff-note" id="diff-note"></p>
+</section>
+
+<section class="prose" aria-labelledby="h-how">
+  <h2 id="h-how">各プラットフォームの手数料の仕組み</h2>
+
+  <h3>BOOTH</h3>
+  <p class="formula">手数料 = 販売価格 × 5.6%（切り上げ）+ 45円</p>
+  <p>2025年10月28日の改定で「5.6%+22円」から「5.6%+45円」に変更されました。ダウンロード販売なら送料・倉庫費用はかからず、この計算だけで手取りが決まります。振込手数料も別途かかりません。</p>
+
+  <h3>note</h3>
+  <p class="formula">手取り = 価格 −（価格×決済手数料）−（残額×10%）− 270円</p>
+  <p>決済手数料は購入者が選ぶ支払い方法で変わり、出品者側は選べません。クレジットカードが5%と最も低く、キャリア決済は15%と最も高くなります。さらにプラットフォーム利用料として、決済手数料を引いた残額の10%（定期購読マガジンは20%）が引かれ、振込のたびに270円かかります。少額の記事ほど、この270円の固定費が重くのしかかります。</p>
+
+  <h3>ココナラ</h3>
+  <p class="formula">手数料 = 販売価格 × 20%（ビデオチャットは25%）× 1.1</p>
+  <p>通常サービス・有料ブログは税込22%、ビデオチャットは税込27.5%です。振込申請額が3,000円未満だと160円の振込手数料がかかりますが、3,000円以上まとめれば無料になります。</p>
+
+  <h3>Kindle（KDP）</h3>
+  <p class="formula">70%プラン：（税抜価格 − 配信コスト）× 70%　／　35%プラン：税抜価格 × 35%</p>
+  <p>70%を受け取るにはKDPセレクト登録（Amazon独占販売）と、税込250〜1,250円の価格設定が条件です。この価格帯を外れると自動的に35%になります。配信コストはファイル1MBあたり1円（このツールでは2MBと仮定）。</p>
+
+  <h3>どれを選ぶべきか</h3>
+  <p>手数料の低さだけで選ぶと、BOOTHが有利に見えます。ただし手数料は「集客力の代金」でもあります。ココナラは検索流入と信頼担保の仕組みに、noteはSEOとフォロワーとの距離の近さに、Kindleは巨大な購買層に、それぞれ手数料が使われています。自分の商品にどの集客力が一番効くかで選ぶのが実質的な判断軸です。</p>
+</section>
+
+<aside class="author" aria-labelledby="h-author">
+  <h2 id="h-author">この計算機について</h2>
+  <p>運営は「はたらくAI研究室」（著者名：AI愛好家）。実際にBOOTHとKindleで販売しながら、この計算機で手取りを管理しています。</p>
+  <div class="btns">
+    <a class="btn primary" href="https://ainative.booth.pm" target="_blank" rel="noopener">AIプロンプト100選を見る（BOOTH）</a>
+    <a class="btn ghost" href="./kindle-royalty-calculator.html">Kindle印税計算機も使う</a>
+  </div>
+</aside>
+
+<footer>
+  <p>免責事項：本ツールの計算結果はあくまで概算です。手数料率・条件は各社の判断で変更される場合があります。正確な金額は必ず各プラットフォームの公式ヘルプでご確認ください。</p>
+  <p>© 2026 はたらくAI研究室</p>
+</footer>
+</main>
+</div>
+
+<script>
+/*CALC-START*/
+function calcBooth(price){
+  var fee = Math.ceil(price * 0.056) + 45;
+  return {name:'BOOTH', fee: fee, net: Math.max(0, price - fee)};
+}
+
+var NOTE_RATES = {card:0.05, carrier:0.15, paypay:0.07, amazonpay:0.07, notepoint:0.10, paypal:0.065};
+function calcNote(price, method){
+  var r = NOTE_RATES[method] || NOTE_RATES.card;
+  var jimu = Math.floor(price * r);
+  var platform = Math.floor((price - jimu) * 0.10);
+  var furikomi = 270;
+  var net = price - jimu - platform - furikomi;
+  return {name:'note', fee: jimu + platform + furikomi, net: Math.max(0, net)};
+}
+
+function calcCoconala(price){
+  var fee = Math.round(price * 0.20 * 1.1);
+  var afterFee = price - fee;
+  var furikomi = afterFee >= 3000 ? 0 : 160;
+  return {name:'ココナラ', fee: fee + furikomi, net: Math.max(0, afterFee - furikomi)};
+}
+
+function exTax(price){ return price / 1.1; }
+function calcKdp(price){
+  var ex = exTax(price);
+  var deliv = 2; // assume 2MB file
+  var ok70 = price >= 250 && price <= 1250;
+  var r35 = ex * 0.35;
+  var r70 = ok70 ? Math.max(0, (ex - deliv) * 0.70) : null;
+  var best = (r70 !== null && r70 >= r35) ? r70 : r35;
+  var label = (r70 !== null && r70 >= r35) ? 'Kindle（70%）' : 'Kindle（35%）';
+  return {name:label, fee: price - best, net: Math.max(0, best)};
+}
+/*CALC-END*/
+
+function yen(n){ return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+
+function update(){
+  var price = parseFloat(document.getElementById('price').value);
+  if (isNaN(price) || price < 0) price = 0;
+  var method = document.getElementById('note-method').value;
+
+  var results = [
+    calcBooth(price),
+    calcNote(price, method),
+    calcCoconala(price),
+    calcKdp(price)
+  ];
+  results.sort(function(a,b){ return b.net - a.net; });
+
+  document.getElementById('price-echo').textContent = yen(price) + 'で売った場合の手取り（振込手数料込み）';
+
+  var max = results[0].net || 1;
+  var rankEl = document.getElementById('rank');
+  rankEl.innerHTML = '';
+  var medals = ['1位','2位','3位','4位'];
+  results.forEach(function(r, i){
+    var pct = price > 0 ? Math.round((r.net / price) * 100) : 0;
+    var barPct = max > 0 ? Math.round((r.net / max) * 100) : 0;
+    var line = document.createElement('div');
+    line.className = 'rline' + (i === 0 ? ' first' : '');
+    line.innerHTML =
+      '<span class="medal">' + medals[i] + '</span>' +
+      '<span class="name">' + r.name + '</span>' +
+      '<span class="barwrap"><span class="bar" style="width:' + barPct + '%"></span></span>' +
+      '<span class="pct">' + pct + '%</span>' +
+      '<span class="fig">' + yen(r.net) + '</span>';
+    rankEl.appendChild(line);
+  });
+
+  var diff = results[0].net - results[results.length-1].net;
+  document.getElementById('diff-note').innerHTML =
+    '<strong>' + results[0].name + '</strong>と<strong>' + results[results.length-1].name + '</strong>では、同じ価格でも手取りに<strong>' + yen(diff) + '</strong>の差があります。';
+}
+
+document.getElementById('price').addEventListener('input', update);
+document.getElementById('note-method').addEventListener('change', update);
+update();
+</script>
+</body>
+</html>
