@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プロンプト文字数＆トークン概算カウンター｜AIの入力量をその場で計測</title>
+<meta name="description" content="プロンプトを貼るだけで、文字数・行数・概算トークン数をリアルタイム計測。200Kコンテキストの使用率もゲージで表示する、AIユーザー向けの無料カウンターです。">
+<meta property="og:title" content="プロンプト文字数＆トークン概算カウンター｜はたらくAI研究室">
+<meta property="og:description" content="プロンプトを貼るだけで文字数と概算トークン数をその場で計測。登録不要・無料。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="はたらくAI研究室">
+<!-- TODO: canonical を設定 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&display=swap" rel="stylesheet">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7413732460126636" crossorigin="anonymous"></script>
+<style>
+:root{
+  --paper:#F7F6F2;
+  --ink:#1F2933;
+  --ai:#2B4C7E;
+  --shu:#C73E3A;
+  --rule:#D9D5CC;
+  --card:#FFFFFF;
+  --muted:#6B7280;
+  --mincho:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:var(--ai)}
+a:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto;padding:0 20px 64px}
+.site{display:flex;align-items:center;gap:10px;padding:20px 0 8px;font-size:13px;letter-spacing:.06em;color:var(--muted)}
+.hanko{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--shu);color:#FBF6EE;font-family:var(--mincho);font-weight:700;font-size:14px;border-radius:4px;transform:rotate(-4deg)}
+h1{font-family:var(--mincho);font-weight:700;font-size:clamp(28px,6.5vw,38px);line-height:1.4;letter-spacing:.02em;margin:12px 0 10px}
+.lead{color:var(--muted);font-size:15px;margin-bottom:6px}
+.meta{font-size:12px;color:var(--muted);margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-bottom:20px}
+.card h2{font-family:var(--mincho);font-weight:600;font-size:19px;letter-spacing:.03em;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+textarea{width:100%;min-height:200px;font-family:var(--sans);font-size:15px;line-height:1.7;color:var(--ink);background:#FDFCFA;border:1px solid var(--rule);border-radius:8px;padding:14px;resize:vertical}
+.toolbar{display:flex;justify-content:flex-end;margin-top:10px}
+.clear-btn{font-family:var(--sans);font-size:13px;color:var(--muted);background:none;border:1px solid var(--rule);border-radius:6px;padding:7px 14px;cursor:pointer}
+.clear-btn:hover{border-color:var(--ai);color:var(--ai)}
+
+.ledger{border-top:1px solid var(--rule)}
+.row{display:flex;align-items:baseline;gap:10px;padding:13px 0;border-bottom:1px dotted var(--rule)}
+.row-name{font-size:14px}
+.dots{flex:1;min-width:24px;border-bottom:1px dotted var(--rule);transform:translateY(-4px)}
+.fig{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:18px;font-weight:600;white-space:nowrap}
+.row.main{padding:16px 0}
+.row.main .row-name{font-family:var(--mincho);font-weight:600;font-size:16px}
+.row.main .fig{font-size:24px;color:var(--ai)}
+.row-note{font-size:12px;color:var(--muted);padding:8px 0 2px}
+
+.gauge-wrap{margin-top:20px}
+.gauge-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.gauge{position:relative;height:22px;background:#EFEDE6;border-radius:6px;overflow:hidden}
+.gauge .fill{position:absolute;left:0;top:0;height:100%;background:var(--ai);border-radius:6px 0 0 6px;min-width:2px;transition:width .2s ease}
+.gauge-note{font-size:12px;color:var(--muted);margin-top:8px}
+
+.prose h2{font-family:var(--mincho);font-weight:600;font-size:21px;margin:36px 0 12px}
+.prose h3{font-size:16px;font-weight:600;margin:22px 0 6px}
+.prose p{margin-bottom:12px}
+.prose .formula{font-family:var(--mono);font-size:13px;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:10px 14px;margin:8px 0 14px;overflow-x:auto;white-space:nowrap}
+
+.author{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-top:36px}
+.author h2{font-family:var(--mincho);font-weight:600;font-size:18px;margin-bottom:8px}
+.author p{font-size:14px;color:var(--muted);margin-bottom:14px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;font-size:14px;text-decoration:none;padding:10px 16px;border-radius:6px;border:1px solid var(--ai)}
+.btn.primary{background:var(--ai);color:#FFF}
+.btn.ghost{color:var(--ai)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);font-size:12px;color:var(--muted)}
+footer p{margin-bottom:8px}
+@media (prefers-reduced-motion:no-preference){
+  .btn{transition:opacity .15s ease}
+  .btn:hover{opacity:.85}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="site">
+  <span class="hanko" aria-hidden="true">研</span>
+  <span>はたらくAI研究室</span>
+</header>
+
+<main>
+<h1>プロンプト文字数＆<br>トークン概算カウンター</h1>
+<p class="lead">プロンプトや文章を貼るだけで、文字数・行数・概算トークン数をリアルタイムで計測します。登録不要・入力内容はどこにも送信されません。</p>
+<p class="meta">最終更新：2026年7月｜トークン数は概算です（モデルにより±3割ほど変動します）</p>
+
+<section class="card" aria-labelledby="h-input">
+  <h2 id="h-input">テキスト入力</h2>
+  <p class="sub">計測はすべてブラウザ内で完結します。入力内容が外部に送られることはありません。</p>
+  <textarea id="text" placeholder="ここにプロンプトや文章を貼り付けてください" aria-label="計測するテキスト"></textarea>
+  <div class="toolbar">
+    <button type="button" class="clear-btn" id="clear">クリア</button>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="h-result">
+  <h2 id="h-result">計測結果</h2>
+  <div class="ledger">
+    <div class="row">
+      <span class="row-name">文字数（すべて）</span>
+      <i class="dots" aria-hidden="true"></i>
+      <span class="fig" id="r-chars">0</span>
+    </div>
+    <div class="row">
+      <span class="row-name">文字数（空白・改行を除く）</span>
+      <i class="dots" aria-hidden="true"></i>
+      <span class="fig" id="r-chars-nows">0</span>
+    </div>
+    <div class="row">
+      <span class="row-name">行数</span>
+      <i class="dots" aria-hidden="true"></i>
+      <span class="fig" id="r-lines">0</span>
+    </div>
+    <div class="row main">
+      <span class="row-name">概算トークン数</span>
+      <i class="dots" aria-hidden="true"></i>
+      <span class="fig" id="r-tokens">0</span>
+    </div>
+    <p class="row-note">日本語は1文字≒1.2トークン、英数字・記号は4文字≒1トークンとして概算しています。</p>
+  </div>
+
+  <div class="gauge-wrap">
+    <div class="gauge-labels">
+      <span>0</span>
+      <span id="gauge-pct">使用率 0%</span>
+      <span>200K</span>
+    </div>
+    <div class="gauge">
+      <div class="fill" id="gauge-fill" style="width:0%"></div>
+    </div>
+    <p class="gauge-note">一般的な200,000トークンのコンテキストウィンドウに対する使用率の目安です。長文の資料を貼り付けると、AIの上限にどれだけ近いかがわかります。</p>
+  </div>
+</section>
+
+<section class="prose" aria-labelledby="h-how">
+  <h2 id="h-how">トークンとは？なぜ数えるのか</h2>
+  <p>トークンは、AIがテキストを処理するときの最小単位です。文字数とは一致せず、AIの利用料金（API課金）も、一度に読み込める上限（コンテキストウィンドウ）も、すべてこのトークン数で決まります。つまりトークン数は、AI利用における「重さ」の単位です。</p>
+
+  <h3>日本語はトークン効率が悪い</h3>
+  <p>多くのAIモデルは英語中心に設計されているため、同じ内容でも日本語は英語よりトークン数が多くなる傾向があります。英語はおおむね4文字で1トークンですが、日本語は1文字で1トークン以上を消費することが珍しくありません。長い資料をAIに渡すときや、APIの料金を見積もるときは、この差を頭に入れておくと予測が正確になります。</p>
+
+  <h3>このツールの概算式</h3>
+  <p class="formula">概算トークン数 = 日本語などの全角文字 × 1.2 ＋ 英数字・記号 ÷ 4</p>
+  <p>実際のトークン数はモデルごとのトークナイザー（分割ルール）によって変わるため、この数字はあくまで目安です。±3割ほどの誤差を見込んでください。正確な数を知りたい場合は、各AIサービスの公式トークナイザーや、APIレスポンスに含まれる使用量（usage）で確認できます。</p>
+
+  <h3>プロンプトを短くする3つのコツ</h3>
+  <p>第一に、前置きや過剰な敬語を削ることです。「お忙しいところ恐れ入りますが」はAIには不要で、指示の密度を上げた方が精度も上がります。第二に、同じ指示の繰り返しをやめること。強調したい条件は繰り返すのではなく、箇条書きで一度だけ明確に書く方が効きます。第三に、例示は必要最小限にすること。良い例を1つ見せる方が、似た例を5つ並べるより効率的です。</p>
+
+  <h3>よくある質問</h3>
+  <p><strong>Q. 文字数とトークン数、どちらを見ればいい？</strong><br>X（旧Twitter）の投稿やnoteのタイトルなど、人間向けの制限は文字数で決まります。AIの料金や上限はトークン数で決まります。用途で使い分けてください。</p>
+  <p><strong>Q. 入力した内容は保存されますか？</strong><br>されません。計測はすべてお使いのブラウザの中だけで行われ、サーバーへの送信は一切ありません。機密情報を含む文章でも安心して計測できます。</p>
+</section>
+
+<aside class="author" aria-labelledby="h-author">
+  <h2 id="h-author">この計算機について</h2>
+  <p>運営は「はたらくAI研究室」（著者名：AI愛好家）。日々の仕事でAIに渡すプロンプトを管理するために作りました。仕事に効くプロンプトの実例は、BOOTHで公開しています。</p>
+  <div class="btns">
+    <a class="btn primary" href="https://ainative.booth.pm" target="_blank" rel="noopener">AIプロンプト100選を見る（BOOTH）</a>
+    <a class="btn ghost" href="./">ほかの無料ツールを見る</a>
+  </div>
+</aside>
+
+<footer>
+  <p>免責事項：本ツールのトークン数は簡易的な概算であり、実際の値はモデル・トークナイザーにより異なります。API料金の正確な見積もりには各サービスの公式情報をご利用ください。</p>
+  <p>© 2026 はたらくAI研究室</p>
+</footer>
+</main>
+</div>
+
+<script>
+/*CALC-START*/
+var CONTEXT_LIMIT = 200000;
+var CJK_RE = /[\u3000-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF01-\uFF60]/g;
+
+function countStats(text){
+  var chars = Array.from(text).length;
+  var charsNoWs = Array.from(text.replace(/\s/g, '')).length;
+  var lines = text === '' ? 0 : text.split('\n').length;
+  var cjk = (text.match(CJK_RE) || []).length;
+  var nonCjk = chars - cjk;
+  var tokens = Math.round(cjk * 1.2 + nonCjk / 4);
+  if (chars > 0 && tokens === 0) tokens = 1;
+  return {chars: chars, charsNoWs: charsNoWs, lines: lines, tokens: tokens};
+}
+/*CALC-END*/
+
+function fmt(n){ return n.toLocaleString('ja-JP'); }
+
+function update(){
+  var s = countStats(document.getElementById('text').value);
+  document.getElementById('r-chars').textContent = fmt(s.chars);
+  document.getElementById('r-chars-nows').textContent = fmt(s.charsNoWs);
+  document.getElementById('r-lines').textContent = fmt(s.lines);
+  document.getElementById('r-tokens').textContent = '約 ' + fmt(s.tokens);
+
+  var pct = (s.tokens / CONTEXT_LIMIT) * 100;
+  document.getElementById('gauge-fill').style.width = Math.min(100, pct) + '%';
+  document.getElementById('gauge-pct').textContent = '使用率 ' + (pct < 0.01 && pct > 0 ? '0.01未満' : pct.toFixed(2)) + '%';
+}
+
+document.getElementById('text').addEventListener('input', update);
+document.getElementById('clear').addEventListener('click', function(){
+  document.getElementById('text').value = '';
+  update();
+  document.getElementById('text').focus();
+});
+update();
+</script>
+</body>
+</html>
