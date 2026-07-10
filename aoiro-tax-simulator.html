@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>青色申告 節税メリットシミュレーター｜白色との税金差をその場で概算</title>
+<meta name="description" content="副業・個人事業の収入と経費を入れるだけで、白色申告と青色申告（10万・55万・65万円控除）の税金差を概算比較。所得税＋住民税の軽減額と、65万円控除に必要な複式簿記・e-Taxの要件もあわせて解説する無料シミュレーターです。">
+<meta property="og:title" content="青色申告 節税メリットシミュレーター｜はたらくAI研究室">
+<meta property="og:description" content="白色のまま？青色にする？10万・55万・65万円控除の節税差を数字で比較できる無料ツール。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="はたらくAI研究室">
+<meta property="og:url" content="https://eo8883494-png.github.io/ai-tools/aoiro-tax-simulator.html">
+<meta property="og:image" content="https://eo8883494-png.github.io/ai-tools/og-index.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!-- TODO: canonical を設定 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F6F2;
+  --ink:#1F2933;
+  --ai:#2B4C7E;
+  --shu:#C73E3A;
+  --rule:#D9D5CC;
+  --card:#FFFFFF;
+  --muted:#6B7280;
+  --mincho:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:var(--ai)}
+a:focus-visible,input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto;padding:0 20px 64px}
+.site{display:flex;align-items:center;gap:10px;padding:20px 0 8px;font-size:13px;letter-spacing:.06em;color:var(--muted)}
+.hanko{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--shu);color:#FBF6EE;font-family:var(--mincho);font-weight:700;font-size:14px;border-radius:4px;transform:rotate(-4deg)}
+h1{font-family:var(--mincho);font-weight:700;font-size:clamp(30px,7vw,40px);line-height:1.35;letter-spacing:.02em;margin:12px 0 10px}
+.lead{color:var(--muted);font-size:15px;margin-bottom:6px}
+.meta{font-size:12px;color:var(--muted);margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-bottom:20px}
+.card h2{font-family:var(--mincho);font-weight:600;font-size:19px;letter-spacing:.03em;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:6px}
+.field label{display:block;font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:5px}
+.field input{width:100%;font-family:var(--mono);font-size:18px;color:var(--ink);background:#FDFCFA;border:1px solid var(--rule);border-radius:6px;padding:9px 10px}
+.field select{width:100%;font-family:var(--sans);font-size:15px;color:var(--ink);background:#FDFCFA;border:1px solid var(--rule);border-radius:6px;padding:10px}
+.field .hint{font-size:11px;color:var(--muted);margin-top:4px}
+.field-wide{grid-column:1 / -1}
+
+.rate-note{font-size:12px;color:var(--muted);margin-top:14px}
+.rate-note strong{color:var(--ink)}
+
+.cmp-wrap{overflow-x:auto;margin-top:18px}
+.cmp{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+.cmp th,.cmp td{border:1px solid var(--rule);padding:9px 8px;text-align:right;white-space:nowrap}
+.cmp th{background:#EFEDE6;font-weight:600;text-align:center;font-size:12px}
+.cmp td:first-child,.cmp th:first-child{text-align:left}
+.cmp td.num{font-family:var(--mono)}
+.cmp tr.best td{background:#EAF3DE;font-weight:600}
+.cmp td .req{display:block;font-size:11px;color:var(--muted);font-weight:400;white-space:normal;line-height:1.5}
+
+.verdict{border-radius:10px;padding:20px;margin-top:18px;border:1px solid;background:#EAF3DE;border-color:#97C459}
+.verdict .vtitle{font-family:var(--mincho);font-weight:600;font-size:18px;margin-bottom:6px;color:#27500A}
+.verdict p{font-size:14px;color:var(--ink);margin-bottom:0}
+
+.note-box{background:#FDFCF9;border:1px dashed var(--rule);border-radius:10px;padding:16px 18px;margin-top:14px;font-size:13px;color:var(--muted)}
+.note-box strong{color:var(--ink)}
+
+.prose h2{font-family:var(--mincho);font-weight:600;font-size:21px;margin:36px 0 12px}
+.prose h3{font-size:16px;font-weight:600;margin:22px 0 6px}
+.prose p{margin-bottom:12px}
+.prose ul,.prose ol{margin:0 0 14px 1.2em}
+.prose li{margin-bottom:6px;font-size:15px}
+
+.author{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 20px;margin-top:36px}
+.author h2{font-family:var(--mincho);font-weight:600;font-size:18px;margin-bottom:8px}
+.author p{font-size:14px;color:var(--muted);margin-bottom:14px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;font-size:14px;text-decoration:none;padding:10px 16px;border-radius:6px;border:1px solid var(--ai)}
+.btn.primary{background:var(--ai);color:#FFF}
+.btn.ghost{color:var(--ai)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);font-size:12px;color:var(--muted)}
+footer p{margin-bottom:8px}
+footer ul{margin:0 0 8px 1.4em}
+footer li{margin-bottom:4px}
+@media (prefers-reduced-motion:no-preference){
+  .btn{transition:opacity .15s ease}
+  .btn:hover{opacity:.85}
+}
+</style>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7413732460126636" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+
+<header class="site">
+  <span class="hanko" aria-hidden="true">研</span>
+  <span>はたらくAI研究室</span>
+</header>
+
+<main>
+<h1>青色申告<br>節税メリットシミュレーター</h1>
+<p class="lead">副業・個人事業の収入と経費を入れるだけで、白色申告のままの場合と、青色申告（10万・55万・65万円控除）にした場合の税金差を概算で比較します。</p>
+<p class="meta">最終更新：2026年7月｜令和8年分（2026年分）の申告を想定した概算です（所得税率は国税庁の速算表〔令和7年分以降適用〕、住民税所得割10%で計算）</p>
+
+<section class="card" aria-labelledby="h-input">
+  <h2 id="h-input">収入と税率区分を入力</h2>
+  <p class="sub">青色申告できるのは事業所得（または事業的規模の不動産所得）です。帳簿をつけて継続的に営んでいることが前提になります。</p>
+
+  <div class="fields">
+    <div class="field">
+      <label for="income">事業・副業の年間収入（円）</label>
+      <input id="income" type="number" inputmode="numeric" min="0" step="1" value="1000000">
+    </div>
+    <div class="field">
+      <label for="expense">年間の必要経費（円）</label>
+      <input id="expense" type="number" inputmode="numeric" min="0" step="1" value="200000">
+      <p class="hint">サーバー代・機材・仕入れなど（青色申告特別控除は含めない）</p>
+    </div>
+    <div class="field field-wide">
+      <label for="salary-range">本業給与のおおよその課税所得</label>
+      <select id="salary-range">
+        <option value="none">本業の給与なし（事業・副業の所得のみ）</option>
+        <option value="r5" selected>〜195万円くらい（税率5%）</option>
+        <option value="r10">195万〜330万円くらい（税率10%）</option>
+        <option value="r20">330万〜695万円くらい（税率20%）</option>
+        <option value="r23">695万〜900万円くらい（税率23%）</option>
+        <option value="r33">900万〜1,800万円くらい（税率33%）</option>
+        <option value="r40">1,800万〜4,000万円くらい（税率40%）</option>
+        <option value="r45">4,000万円超（税率45%）</option>
+      </select>
+      <p class="hint">課税所得＝源泉徴収票の「給与所得控除後の金額」−「所得控除の額の合計額」。額面年収より大きく小さい金額になります。</p>
+    </div>
+  </div>
+
+  <p class="rate-note" id="rate-note"></p>
+
+  <div class="cmp-wrap">
+    <table class="cmp" aria-label="申告方式ごとの節税額の比較">
+      <thead>
+        <tr>
+          <th>申告方式</th>
+          <th>特別控除</th>
+          <th>所得税の軽減<span style="font-weight:400">※</span></th>
+          <th>住民税の軽減</th>
+          <th>合計（年）</th>
+        </tr>
+      </thead>
+      <tbody id="cmp-body">
+      </tbody>
+    </table>
+  </div>
+  <p class="rate-note">※所得税の軽減額には復興特別所得税（基準所得税額の2.1%、令和19年分まで）を含みます。控除で税率の区分をまたぐ場合、実際の軽減額はこれより少し小さくなることがあります。</p>
+
+  <div class="verdict" id="verdict">
+    <p class="vtitle" id="verdict-title">－</p>
+    <p id="verdict-body">－</p>
+  </div>
+
+  <div class="note-box">
+    <strong>控除額は所得が上限：</strong>青色申告特別控除は、事業所得などの金額が控除額より少ない場合、その所得金額までしか引けません。また、55万・65万円控除は「複式簿記での記帳」が要件のため、実務上は会計ソフトで帳簿をつけるのが現実的です（下の解説参照）。
+  </div>
+</section>
+
+<section class="prose" aria-labelledby="h-how">
+  <h2 id="h-how">青色申告特別控除の仕組み</h2>
+  <p>個人事業の確定申告には「白色申告」と「青色申告」があります。青色申告を選んで一定の帳簿要件を満たすと、所得から最大65万円を差し引ける「青色申告特別控除」が使えます。控除された分だけ課税所得が減るので、その金額に税率（所得税の限界税率＋住民税10%）を掛けた分の税金が軽くなる、というのが節税の仕組みです。</p>
+
+  <h3>控除は10万・55万・65万円の3段階</h3>
+  <ul>
+    <li><strong>10万円控除：</strong>簡易な帳簿でOK。青色申告の中では一番ハードルが低い段階です。</li>
+    <li><strong>55万円控除：</strong>事業所得（または事業的規模の不動産所得）があり、正規の簿記の原則（一般的には複式簿記）で記帳し、貸借対照表と損益計算書を添えて期限内（翌年3月15日まで）に申告することが要件です。</li>
+    <li><strong>65万円控除：</strong>55万円控除の要件に加えて、「e-Taxで確定申告する」か「仕訳帳・総勘定元帳を優良な電子帳簿の要件を満たして保存する」のどちらかを満たすと10万円上乗せされます。実務上はe-Tax申告のほうが手軽です。</li>
+  </ul>
+
+  <h3>そもそも青色申告するには事前申請が必要</h3>
+  <p>青色申告は、適用を受けたい年の3月15日まで（その年の1月16日以後に開業した場合は開業から2か月以内）に「青色申告承認申請書」を税務署へ提出しておく必要があります。今年分に間に合わなかった場合も、来年分に向けていま出しておく、という使い方ができます。</p>
+
+  <h3>副業が「雑所得」だと青色申告できない</h3>
+  <p>青色申告の対象は事業所得・不動産所得・山林所得です。副業の規模が小さく、帳簿もつけていない場合は「雑所得」と判断されることが多く、その場合はこのページの控除は使えません。帳簿をつけて記録を残しながら継続的に取り組んでいることが、事業所得として申告するうえでの土台になります。判断に迷う場合は税務署や税理士に確認してください。</p>
+
+  <h3>控除以外の青色申告のメリット</h3>
+  <ul>
+    <li>赤字（純損失）を翌年以後3年間繰り越して、黒字と相殺できる</li>
+    <li>生計を一にする家族への給与を経費にできる（青色事業専従者給与・届出が必要）</li>
+    <li>30万円未満の備品などを一度に経費にできる特例（少額減価償却資産の特例）が使える</li>
+  </ul>
+
+  <h3>住民税や国民健康保険にも効く</h3>
+  <p>青色申告特別控除で所得が減ると、所得税だけでなく住民税（所得割10%）の計算のもとになる所得も減ります。国民健康保険に加入している場合は保険料の算定所得にも影響します（本シミュレーターの計算には国保は含めていません）。</p>
+</section>
+
+<aside class="author" aria-labelledby="h-author">
+  <h2 id="h-author">この計算機について</h2>
+  <p>運営は「はたらくAI研究室」（著者名：AI愛好家）。本ツールは国税庁・総務省の公表ルールに基づく一般的な概算であり、個別の税務相談ではありません。そもそも確定申告が必要かどうかは、先に「副業20万円ラインシミュレーター」で確認できます。</p>
+  <div class="btns">
+    <a class="btn primary" href="./side-income-20man-simulator.html">20万円ラインを判定する</a>
+    <a class="btn ghost" href="https://ainative.booth.pm" target="_blank" rel="noopener">AIプロンプト100選を見る（BOOTH）</a>
+    <a class="btn ghost" href="./">ほかの無料ツールを見る</a>
+  </div>
+</aside>
+
+<!-- AFFILIATE-SLOT:MF-KAKUTEI 2026-07-10公開(もしも広告リンク) -->
+<aside class="author" aria-labelledby="h-related">
+  <h2 id="h-related">55万・65万円控除を目指す方へ（PR・広告を含みます）</h2>
+  <p>55万・65万円控除の前提になるのは複式簿記での記帳です。手書きやExcelでも不可能ではありませんが、会計ソフトを使うと、銀行口座やカード明細の取り込みから複式簿記の帳簿づけ・貸借対照表の作成・e-Tax用の申告書類までを一つの画面で進められます。マネーフォワード クラウドは無料で会員登録して試せます。</p>
+  <div class="btns">
+    <a class="btn primary" href="//af.moshimo.com/af/c/click?a_id=5681020&amp;p_id=888&amp;pc_id=1087&amp;pl_id=64839" target="_blank" rel="nofollow sponsored noopener" referrerpolicy="no-referrer-when-downgrade">マネーフォワード クラウドを見る（無料登録・PR）</a>
+  </div>
+  <img src="//i.moshimo.com/af/i/impression?a_id=5681020&amp;p_id=888&amp;pc_id=1087&amp;pl_id=64839" width="1" height="1" style="border:none;" alt="" loading="lazy">
+</aside>
+
+<footer>
+  <p>免責事項：本ツールの金額はあくまで一般的なケースに基づく概算です。実際の税額は、基礎控除・社会保険料控除などの各種控除、事業所得か雑所得かの区分、他の所得の有無、住民税の均等割・調整控除など個別の事情によって変わります。青色申告の適用可否や正確な税額は、必ず税理士または税務署・市区町村役場でご確認ください。</p>
+  <p>出典（令和8年分の申告を想定。所得税率は令和7年分以降に適用される速算表）：</p>
+  <ul>
+    <li><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm" target="_blank" rel="noopener">国税庁 タックスアンサー No.2260 所得税の税率（速算表・復興特別所得税）</a></li>
+    <li><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2072.htm" target="_blank" rel="noopener">国税庁 タックスアンサー No.2072 青色申告特別控除（10万・55万・65万円の要件）</a></li>
+    <li><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2070.htm" target="_blank" rel="noopener">国税庁 タックスアンサー No.2070 青色申告制度（承認申請の期限）</a></li>
+    <li><a href="https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_06.html" target="_blank" rel="noopener">総務省 個人住民税（所得割の標準税率10%）</a></li>
+    <li><a href="https://www.nta.go.jp/users/gensen/2025kiso/index.htm" target="_blank" rel="noopener">国税庁 令和7年度税制改正による基礎控除の見直し等（「給与なし」選択時の課税所得推定に使用）</a></li>
+  </ul>
+  <p><a href="./about.html">運営者情報</a>　<a href="./privacy-policy.html">プライバシーポリシー</a>　<a href="./contact.html">お問い合わせ</a></p>
+  <p>© 2026 はたらくAI研究室</p>
+</footer>
+</main>
+</div>
+
+<script>
+/*CALC-START*/
+/* 所得税の速算表（令和7年分以降・国税庁タックスアンサーNo.2260） */
+var BRACKETS = [
+  {limit: 1950000,  rate: 0.05, ded: 0},
+  {limit: 3300000,  rate: 0.10, ded: 97500},
+  {limit: 6950000,  rate: 0.20, ded: 427500},
+  {limit: 9000000,  rate: 0.23, ded: 636000},
+  {limit: 18000000, rate: 0.33, ded: 1536000},
+  {limit: 40000000, rate: 0.40, ded: 2796000},
+  {limit: Infinity, rate: 0.45, ded: 4796000}
+];
+var RATE_BY_KEY = {r5:0.05, r10:0.10, r20:0.20, r23:0.23, r33:0.33, r40:0.40, r45:0.45};
+var RESIDENT_RATE = 0.10;      /* 住民税所得割（総務省・標準税率） */
+var FUKKO = 1.021;             /* 復興特別所得税 2.1%（令和19年分まで） */
+var BASIC_DED_EST = 950000;    /* 給与なし選択時の課税所得推定に使う基礎控除の目安（令和7・8年分、合計所得132万円以下の額） */
+
+/* 課税所得tに対する所得税額（復興特別所得税を除く） */
+function incomeTax(t){
+  if (t <= 0) return 0;
+  for (var i = 0; i < BRACKETS.length; i++){
+    if (t < BRACKETS[i].limit) return t * BRACKETS[i].rate - BRACKETS[i].ded;
+  }
+  return 0;
+}
+function marginalRate(t){
+  if (t <= 0) return 0;
+  for (var i = 0; i < BRACKETS.length; i++){
+    if (t < BRACKETS[i].limit) return BRACKETS[i].rate;
+  }
+  return 0;
+}
+
+/* 方式ごとの軽減額を計算する。
+   profit: 青色申告特別控除前の事業所得, ded: 特別控除額(0/10万/55万/65万),
+   rangeKey: 'none' または税率区分キー */
+function calcMethod(profit, ded, rangeKey){
+  var effDed = Math.min(ded, Math.max(0, profit)); /* 控除は所得が上限（No.2072） */
+  var taxSave, residentSave;
+  if (rangeKey === 'none'){
+    /* 給与なし: 事業所得から基礎控除の目安を引いた課税所得の概算で速算表を適用 */
+    var t = Math.max(0, profit - BASIC_DED_EST);
+    taxSave = (incomeTax(t) - incomeTax(Math.max(0, t - effDed))) * FUKKO;
+    residentSave = RESIDENT_RATE * Math.min(effDed, t);
+  } else {
+    /* 給与あり: 選択した課税所得レンジの限界税率を控除額に適用 */
+    taxSave = RATE_BY_KEY[rangeKey] * effDed * FUKKO;
+    residentSave = RESIDENT_RATE * effDed;
+  }
+  return {effDed: effDed, taxSave: taxSave, residentSave: residentSave, total: taxSave + residentSave};
+}
+/*CALC-END*/
+
+function yen(n){ return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+
+var METHODS = [
+  {key:'white', label:'白色申告',        ded:0,      req:'特別控除なし（簡易な帳簿の記帳義務あり）'},
+  {key:'a10',   label:'青色 10万円控除', ded:100000, req:'事前申請＋簡易な帳簿でOK'},
+  {key:'a55',   label:'青色 55万円控除', ded:550000, req:'複式簿記＋貸借対照表添付＋期限内申告'},
+  {key:'a65',   label:'青色 65万円控除', ded:650000, req:'55万円の要件＋e-Tax申告（または優良な電子帳簿保存）'}
+];
+
+function update(){
+  var income = parseFloat(document.getElementById('income').value);
+  if (isNaN(income) || income < 0) income = 0;
+  var expense = parseFloat(document.getElementById('expense').value);
+  if (isNaN(expense) || expense < 0) expense = 0;
+  var rangeKey = document.getElementById('salary-range').value;
+
+  var profit = Math.max(0, income - expense);
+
+  var rateNote = document.getElementById('rate-note');
+  if (rangeKey === 'none'){
+    var tEst = Math.max(0, profit - BASIC_DED_EST);
+    rateNote.innerHTML = '事業所得（控除前）は <strong>' + yen(profit) + '</strong>。給与なしのため、基礎控除の目安（95万円）を差し引いた課税所得 <strong>' + yen(tEst) + '</strong>（概算）に速算表を適用します。社会保険料控除などがあると実際の税率はこれより低くなることがあります。';
+  } else {
+    rateNote.innerHTML = '事業所得（控除前）は <strong>' + yen(profit) + '</strong>。選択した区分の限界税率 <strong>' + Math.round(RATE_BY_KEY[rangeKey] * 100) + '%</strong>（＋復興特別所得税）と住民税10%で計算します。副業所得を足すと上の区分にかかる場合があります。';
+  }
+
+  var results = [];
+  for (var i = 0; i < METHODS.length; i++){
+    results.push(calcMethod(profit, METHODS[i].ded, rangeKey));
+  }
+
+  var rows = '';
+  for (var j = 0; j < METHODS.length; j++){
+    var m = METHODS[j], r = results[j];
+    rows += '<tr' + (m.key === 'a65' ? ' class="best"' : '') + '>' +
+      '<td>' + m.label + '<span class="req">' + m.req + '</span></td>' +
+      '<td class="num">' + (r.effDed > 0 ? yen(r.effDed) : '－') + '</td>' +
+      '<td class="num">−' + yen(r.taxSave) + '</td>' +
+      '<td class="num">−' + yen(r.residentSave) + '</td>' +
+      '<td class="num">−' + yen(r.total) + '</td>' +
+      '</tr>';
+  }
+  document.getElementById('cmp-body').innerHTML = rows;
+
+  var diff65 = results[3].total - results[0].total;
+  var title = document.getElementById('verdict-title');
+  var body = document.getElementById('verdict-body');
+  if (profit <= 0){
+    title.textContent = '所得が0円のため、控除の効果はありません';
+    body.textContent = '経費が収入を上回っています。青色申告なら赤字（純損失）を翌年以後3年間繰り越せるメリットはあります。';
+  } else if (diff65 <= 0){
+    title.textContent = 'この条件では税額の差はほぼ出ません';
+    body.textContent = '課税所得が少ないため、控除を増やしても軽減額はほとんど変わりません。所得が増えてきたタイミングで改めて試算してみてください。';
+  } else {
+    title.textContent = '白色のままとの差は 年およそ ' + yen(diff65);
+    body.textContent = '白色申告と比べて、青色65万円控除なら所得税＋住民税で年およそ' + yen(diff65) + '軽くなる計算です（概算）。'
+      + (results[3].effDed < 650000 ? '所得が65万円未満のため、控除は所得金額（' + yen(results[3].effDed) + '）が上限になっています。' : '');
+  }
+}
+
+document.getElementById('income').addEventListener('input', update);
+document.getElementById('expense').addEventListener('input', update);
+document.getElementById('salary-range').addEventListener('change', update);
+update();
+</script>
+</body>
+</html>
